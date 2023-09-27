@@ -1,2 +1,5 @@
 tif-read-test.py
 lib/__pycache__/
+data/*.tif
+data/*.csv
+output/*

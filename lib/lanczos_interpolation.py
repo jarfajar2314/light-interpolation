@@ -125,7 +125,7 @@ def convert_to_df(df, array, multiplier, save_csv=False, save_filename=""):
 
     # Save the dataframe to a CSV file
     if (save_csv == True):
-        df.to_csv('data/' + save_filename + '.csv', index=False)
+        df.to_csv('output/' + save_filename + '.csv', index=False)
     return df
 
 
@@ -156,3 +156,39 @@ def save_to_tif(array, df, multiplier, filename):
         transform=transform,
     ) as dst:
         dst.write(array.astype(rasterio.float32), 1)
+
+
+def pixel2coord(col, row, transform):
+    lon, lat = transform * (col, row)
+    return lon, lat
+
+
+def tif_to_csv(filename):
+    # Open the GeoTIFF file
+    with rasterio.open("data/" + filename) as src:
+        # Get the GeoTIFF transform parameters
+        transform = src.transform
+
+        # Read the GeoTIFF data as a 2D array
+        data = src.read(1)
+
+    # Get the rows, cols and vals (ignoring NoData values)
+    rows, cols = np.where(data != src.nodata)
+    vals = np.extract(data != src.nodata, data)
+
+    # Convert pixel positions to longitude, latitude
+    coords = [pixel2coord(col, row, transform) for col, row in zip(cols, rows)]
+    lons, lats = zip(*coords)
+
+    # Create a pandas dataframe from the longitude, latitude and value arrays
+    df = pd.DataFrame({
+        'x': lons,
+        'y': lats,
+        'val': vals
+    })
+
+    # Save dataframe to CSV
+    new_filename = filename.split('.')[0] + ".csv"
+    df.to_csv("data/" + new_filename, index=False)
+    print("Saved to data/" + new_filename)
+    return new_filename

@@ -11,7 +11,10 @@ import os
 
 
 def interpolation_lanczos(filename, multiplier):
-    df = pd.read_csv('data/' + filename, delimiter=',', encoding='utf-8')
+    if not filename.endswith('.csv'):
+        csv_file = lanczos.tif_to_csv(filename)
+
+    df = pd.read_csv('data/' + csv_file, delimiter=',', encoding='utf-8')
     array = df.pivot(index='y', columns='x', values='val')
 
     # Calculate the shape (length) of "x" and "y" columns
@@ -33,8 +36,8 @@ def interpolation_lanczos(filename, multiplier):
         os.makedirs('output')
     # Save the array as a GeoTIFF
     lanczos.save_to_tif(new_array, df, multiplier,
-                        "output/" + filename.split(".")[0] + ".tif")
-    print("Saved to output/" + filename.split(".")[0] + ".tif")
+                        "output/" + csv_file.split(".")[0] + "_interpolated.tif")
+    print("Saved to output/" + csv_file.split(".")[0] + "_interpolated.tif")
 
     # Plot the interpolated array
     x_min = new_df['x'].min()
